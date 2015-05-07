@@ -30,6 +30,12 @@ var map;
 function initialize() {
   directionsDisplay = new google.maps.DirectionsRenderer();
 
+  var mapOptions = {
+    zoom: 6
+  };
+
+  map = new google.maps.Map(document.getElementById('map-canvas'), mapOptions);
+
   if(navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(function(position) {
       var pos = new google.maps.LatLng(position.coords.latitude,
@@ -50,7 +56,6 @@ function initialize() {
     handleNoGeolocation(false);
   }
 
-  map = new google.maps.Map(document.getElementById('map-canvas'), mapOptions);
   directionsDisplay.setMap(map);
 }
 
