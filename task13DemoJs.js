@@ -2,8 +2,15 @@ var vehicle_old;
 var vehicle;
 var map;
 var markerArray = [];
+var directionsDisplay;
+var directionsService;
+var stepDisplay;
+var markerArray1 = [];
 
 $( document ).on( "pagecreate", "#map-page", function() {
+
+	directionsService = new google.maps.DirectionsService();
+
     var defaultLatLng = new google.maps.LatLng(40.440876, -79.9497555);  // Default to Pittsburgh
     if ( navigator.geolocation ) {
         function success(pos) {
@@ -20,7 +27,7 @@ $( document ).on( "pagecreate", "#map-page", function() {
     }
     function drawMap(latlng) {
         var myOptions = {
-            zoom: 11,
+            zoom: 12,
             center: latlng,
             mapTypeId: google.maps.MapTypeId.ROADMAP
         };
@@ -34,8 +41,26 @@ $( document ).on( "pagecreate", "#map-page", function() {
 		
 		//loadVehicle();
 
+		// Create a renderer for directions and bind it to the map.
+	  var rendererOptions = {
+	    map: map
+	  }
+
+	  directionsDisplay = new google.maps.DirectionsRenderer(rendererOptions)
+
+	  // Instantiate an info window to hold step text.
+	  stepDisplay = new google.maps.InfoWindow();
+
 		setInterval(function(){loadVehicle(); },10000);
     }
+});
+
+$(document).ready(function() {   
+	$('#end').keyup(function (e) {
+		if (e.keyCode == 13) {
+			calcRoute();
+		}
+	});
 });
 
 function loadVehicle(){
@@ -83,9 +108,60 @@ function createVehicleMarker(vehicle, map) {
   });
 }
 
+function calcRoute() {
 
+  // First, remove any existing markers from the map.
+  for (var i = 0; i < markerArray1.length; i++) {
+    markerArray1[i].setMap(null);
+  }
 
+  // Now, clear the array itself.
+  markerArray1 = [];
 
+  // Retrieve the start and end locations and create
+  // a DirectionsRequest using WALKING directions.
+  var start = document.getElementById('start').value;
+  var end = document.getElementById('end').value;
+  var request = {
+      origin: start,
+      destination: end,
+      travelMode: google.maps.TravelMode.TRANSIT
+  };
 
+  // Route the directions and pass the response to a
+  // function to create markers for each step.
+  directionsService.route(request, function(response, status) {
+    if (status == google.maps.DirectionsStatus.OK) {
+      //var warnings = document.getElementById('warnings_panel');
+      //warnings.innerHTML = '<b>' + response.routes[0].warnings + '</b>';
+      directionsDisplay.setDirections(response);
+      showSteps(response);
+    }
+  });
+}
 
+function showSteps(directionResult) {
+  // For each step, place a marker, and add the text to the marker's
+  // info window. Also attach the marker to an array so we
+  // can keep track of it and remove it when calculating new
+  // routes.
+  var myRoute = directionResult.routes[0].legs[0];
 
+  for (var i = 0; i < myRoute.steps.length; i++) {
+    var marker = new google.maps.Marker({
+      position: myRoute.steps[i].start_location,
+      map: map
+    });
+    attachInstructionText(marker, myRoute.steps[i].instructions);
+    markerArray[i] = marker;
+  }
+}
+
+function attachInstructionText(marker, text) {
+  google.maps.event.addListener(marker, 'click', function() {
+    // Open an info window when the marker is clicked on,
+    // containing the text of the step.
+    stepDisplay.setContent(text);
+    stepDisplay.open(map, marker);
+  });
+}
