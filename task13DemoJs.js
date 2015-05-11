@@ -6,6 +6,7 @@ var directionsDisplay;
 var directionsService;
 var stepDisplay;
 var markerArray1 = [];
+var interval;
 
 $( document ).on( "pagecreate", "#map-page", function() {
 
@@ -51,21 +52,52 @@ $( document ).on( "pagecreate", "#map-page", function() {
 	  // Instantiate an info window to hold step text.
 	  stepDisplay = new google.maps.InfoWindow();
 
-		setInterval(function(){loadVehicle(); },10000);
+    var start = (document.getElementById('start'));
+    var end = (document.getElementById('end'));
+
+    map.controls[google.maps.ControlPosition.TOP_LEFT].push(start);
+    map.controls[google.maps.ControlPosition.TOP_LEFT].push(end);
+
+    var autocomplete1 = new google.maps.places.Autocomplete(start);
+    autocomplete1.bindTo('bounds', map);
+
+    var autocomplete2 = new google.maps.places.Autocomplete(end);
+    autocomplete2.bindTo('bounds', map);
+
+    // load vehicle marker the first time
+    loadVehicle();
+    
+		this.interval = setInterval(function(){loadVehicle(); },10000);
     }
 });
 
-$(document).ready(function() {   
-	$('#end').keyup(function (e) {
-		if (e.keyCode == 13) {
-			calcRoute();
-		}
-	});
-});
+function askDirection(){ 
+  if (event.keyCode === 13) {
+    calcRoute();   
+  }
+}
 
-function loadVehicle(){
+function loadVehicle(rt){ // this for running the bus real time tracking
+
+  var pac_api = "http://realtime.portauthority.org/bustime/api/v2/getvehicles?key=8WhZtp3KqS6hSc4MBriZeA6uq&format=json&rt=";
+
+  var bus_route="";
+
+  if (!rt) {
+    bus_route = "61A";
+  } else {
+    for (var i = 0; i < rt.length; i++) {
+      bus_route += rt[i];
+      if (i === 0 || i === rt.length ){
+        bus_route += ",";
+      }
+    }
+  }
+
+  pac_api += bus_route;  
+
 	jQuery.ajax(
-		"http://realtime.portauthority.org/bustime/api/v2/getvehicles?key=8WhZtp3KqS6hSc4MBriZeA6uq&rt=71B,71D&format=json",
+		pac_api,
 		{
 			dataType: "json",
 			type: "GET",
@@ -81,6 +113,9 @@ function loadVehicle(){
 			for (i = 0; i < markerArray.length; i++) {
     			markerArray[i].setMap(null);
   			}
+
+      // Now, clear the array itself.
+      markerArray = [];
 
 			for (var i = 0; i < vehicle.length; i++) {
 				var icon_url = "https://chart.googleapis.com/chart?chst=d_bubble_icon_text_small&chld=bus" 
@@ -108,7 +143,7 @@ function createVehicleMarker(vehicle, map) {
   });
 }
 
-function calcRoute() {
+function calcRoute() { // this is for creating route direction
 
   // First, remove any existing markers from the map.
   for (var i = 0; i < markerArray1.length; i++) {
@@ -134,13 +169,41 @@ function calcRoute() {
     if (status == google.maps.DirectionsStatus.OK) {
       //var warnings = document.getElementById('warnings_panel');
       //warnings.innerHTML = '<b>' + response.routes[0].warnings + '</b>';
+
+      var myRt = response.routes[0].legs[0];
+
+      var rt=[];
+      var j = 0;
+      for (var i =0; i < myRt.steps.length; i++) {
+        if (myRt.steps[i].travel_mode === "TRANSIT") {
+          rt[j] = myRt.steps[i].transit.line.short_name;
+          j += 1;
+        }
+      }
+
+      // clear old interval
+      window.clearInterval(interval);
+
+      // clear all previous bus marker
+      for (i = 0; i < markerArray.length; i++) {
+          markerArray[i].setMap(null);
+        }
+
+      // load vehicle marker the first time
+      loadVehicle(rt);
+
+      // load vehicle marker using timer
+      this.interval = setInterval(function(){loadVehicle(rt); },10000);
+
       directionsDisplay.setDirections(response);
       showSteps(response);
+
+
     }
   });
 }
 
-function showSteps(directionResult) {
+function showSteps(directionResult) { // this is for creating directions step
   // For each step, place a marker, and add the text to the marker's
   // info window. Also attach the marker to an array so we
   // can keep track of it and remove it when calculating new
@@ -157,7 +220,7 @@ function showSteps(directionResult) {
   }
 }
 
-function attachInstructionText(marker, text) {
+function attachInstructionText(marker, text) { // this for creating instructions
   google.maps.event.addListener(marker, 'click', function() {
     // Open an info window when the marker is clicked on,
     // containing the text of the step.
