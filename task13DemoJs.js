@@ -3,16 +3,17 @@ var vehicle;
 var map;
 var markerArray = [];
 var directionsDisplay;
-var directionsService;
+var directionsService = new google.maps.DirectionsService();
 var stepDisplay;
 var markerArray1 = [];
 var interval;
-
 var autocomplete2;
 
-$( document ).on( "pagecreate", "#map-page", function() {
+function padDigits(number, digits) {
+    return Array(Math.max(digits - String(number).length + 1, 0)).join(0) + number;
+}
 
-	directionsService = new google.maps.DirectionsService();
+$( document ).on( "pagecreate", "#map-page", function() {
 
     var defaultLatLng = new google.maps.LatLng(40.440876, -79.9497555);  // Default to Pittsburgh
     
@@ -21,9 +22,11 @@ $( document ).on( "pagecreate", "#map-page", function() {
             // Location found, show map with these coordinates
             drawMap(new google.maps.LatLng(pos.coords.latitude, pos.coords.longitude));
         }
+
         function fail(error) {
             drawMap(defaultLatLng);  // Failed to find location, show default map
         }
+
         // Find the users current position.  Cache the location for 5 minutes, timeout after 6 seconds
         navigator.geolocation.getCurrentPosition(success, fail, {maximumAge: 500000, enableHighAccuracy:true, timeout: 6000});
     } else {
@@ -36,54 +39,66 @@ $( document ).on( "pagecreate", "#map-page", function() {
             center: latlng,
             mapTypeId: google.maps.MapTypeId.ROADMAP
         };
+
         this.map = new google.maps.Map(document.getElementById("map-canvas"), myOptions);
-//         // Add an overlay to the map of current lat/lng
-//         var marker = new google.maps.Marker({
-//             position: latlng,
-//             map: map,
-//             title: "Greetings!"
-//         });
-		
-		//loadVehicle();
 
-		// Create a renderer for directions and bind it to the map.
-	  var rendererOptions = {
-	    map: map
-	  }
+    		// Create a renderer for directions and bind it to the map.
+    	  var rendererOptions = {
+    	    map: map
+    	  }
 
-	  directionsDisplay = new google.maps.DirectionsRenderer(rendererOptions);
+    	  directionsDisplay = new google.maps.DirectionsRenderer(rendererOptions);
 
-    directionsDisplay.setPanel(document.getElementById('directions-panel'));
+        directionsDisplay.setPanel(document.getElementById('directions-panel'));
 
-	  // Instantiate an info window to hold step text.
-	  stepDisplay = new google.maps.InfoWindow();
+    	  // Instantiate an info window to hold step text.
+    	  stepDisplay = new google.maps.InfoWindow();
 
-    var start = (document.getElementById('start'));
-    var end = (document.getElementById('end'));
+        var start = (document.getElementById('start'));
+        var end = (document.getElementById('end'));
 
-    map.controls[google.maps.ControlPosition.TOP_LEFT].push(start);
-    map.controls[google.maps.ControlPosition.TOP_LEFT].push(end);
+        map.controls[google.maps.ControlPosition.TOP_LEFT].push(start);
+        map.controls[google.maps.ControlPosition.TOP_LEFT].push(end);
 
-    var autocomplete1 = new google.maps.places.Autocomplete(start);
-    autocomplete1.bindTo('bounds', map);
+        var autocomplete1 = new google.maps.places.Autocomplete(start);
+        autocomplete1.bindTo('bounds', map);
 
-    autocomplete2 = new google.maps.places.Autocomplete(end);
-    autocomplete2.bindTo('bounds', map);
+        autocomplete2 = new google.maps.places.Autocomplete(end);
+        autocomplete2.bindTo('bounds', map);
 
-    google.maps.event.addListener(autocomplete2, 'place_changed', function() {
-      calcRoute();
-     });
+        google.maps.event.addListener(autocomplete2, 'place_changed', function() {
+          calcRoute();
+         });
 
-    // load vehicle marker the first time
-    loadVehicle();
-    
-		this.interval = setInterval(function(){loadVehicle(); },10000);
+        /*google.maps.event.addDomListener(document.getElementById('directions-panel'), 'click',
+        calcRoute);*/
+
+        // load vehicle marker the first time
+        loadVehicle();
+        
+    		this.interval = setInterval(function(){loadVehicle(); },10000);
+
+        addDepart();
     }
 });
 
-function askDirection(){ 
-  if (event.keyCode === 13) {
-    calcRoute();   
+function addDepart() {
+  var depart = document.getElementById('depart');
+  var time = new Date();
+  nowHours = padDigits(time.getHours(),2);
+  nowMin = padDigits(time.getMinutes(),2);
+  var current = nowHours + ":" + nowMin;
+  for (var i = 0; i < 24; i++) {
+    for (var j = 0; j < 60; j += 1) {
+      var x = i < 10 ? '0' + i : i;
+      var y = j < 10 ? '0' + j : j;
+      dptTime = x + ':' + y;
+      if ( dptTime === current ) {
+        depart.innerHTML += '<option value =' + dptTime + ' selected>' + dptTime + '</option>';
+      } else {
+        depart.innerHTML += '<option value =' + dptTime + '>' + dptTime + '</option>';
+      }
+    }
   }
 }
 
@@ -116,9 +131,6 @@ function loadVehicle(rt){ // this for running the bus real time tracking
 			},
 			success: function(data, textStatus, jqXHR) {					
 				vehicle = data["bustime-response"].vehicle;
-				//vehicle.forEach(function(val, index, array) {	
-			    	//createVehicleMarker(val, map);
-				//}
 
 			for (i = 0; i < markerArray.length; i++) {
     			markerArray[i].setMap(null);
@@ -143,16 +155,6 @@ function loadVehicle(rt){ // this for running the bus real time tracking
 	);
 }
 
-function createVehicleMarker(vehicle, map) {
-  var icon_url = "https://chart.googleapis.com/chart?chst=d_bubble_icon_text_small&chld=bus" + "|bbT|" + vehicle.rt + "|FFBB00|000000";
-  var marker = new google.maps.Marker({
-    icon: icon_url,
-    position: new google.maps.LatLng(vehicle.lat, vehicle.lon),
-    optimized: true,
-    map: map
-  });
-}
-
 function calcRoute() { // this is for creating route direction
 
   // First, remove any existing markers from the map.
@@ -163,6 +165,21 @@ function calcRoute() { // this is for creating route direction
   // Now, clear the array itself.
   markerArray1 = [];
 
+  var departure = document.getElementById('depart').value;
+  var bits = departure.split(':');
+  var now = new Date();
+
+  var time = new Date();
+  time.setHours(bits[0]);
+  time.setMinutes(bits[1]);
+
+  var ms = time.getTime();
+  /*if (ms < now.getTime()) {
+    ms += 24 * 60 * 60 * 1000;
+  }*/
+
+  var departureTime = new Date(ms);
+
   // Retrieve the start and end locations and create
   // a DirectionsRequest using WALKING directions.
   var start = document.getElementById('start').value;
@@ -171,7 +188,10 @@ function calcRoute() { // this is for creating route direction
       origin: start,
       destination: end,
       provideRouteAlternatives: true,
-      travelMode: google.maps.TravelMode.TRANSIT
+      travelMode: google.maps.TravelMode.TRANSIT,
+      transitOptions: {
+        departureTime: departureTime
+      }
   };
 
   // Route the directions and pass the response to a
