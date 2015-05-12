@@ -8,12 +8,15 @@ var stepDisplay;
 var markerArray1 = [];
 var interval;
 
+var autocomplete2;
+
 $( document ).on( "pagecreate", "#map-page", function() {
 
 	directionsService = new google.maps.DirectionsService();
 
     var defaultLatLng = new google.maps.LatLng(40.440876, -79.9497555);  // Default to Pittsburgh
-    if ( navigator.geolocation ) {
+    
+    if ( navigator.geolocation ) {
         function success(pos) {
             // Location found, show map with these coordinates
             drawMap(new google.maps.LatLng(pos.coords.latitude, pos.coords.longitude));
@@ -26,6 +29,7 @@ $( document ).on( "pagecreate", "#map-page", function() {
     } else {
         drawMap(defaultLatLng);  // No geolocation support, show default map
     }
+
     function drawMap(latlng) {
         var myOptions = {
             zoom: 12,
@@ -47,7 +51,9 @@ $( document ).on( "pagecreate", "#map-page", function() {
 	    map: map
 	  }
 
-	  directionsDisplay = new google.maps.DirectionsRenderer(rendererOptions)
+	  directionsDisplay = new google.maps.DirectionsRenderer(rendererOptions);
+
+    directionsDisplay.setPanel(document.getElementById('directions-panel'));
 
 	  // Instantiate an info window to hold step text.
 	  stepDisplay = new google.maps.InfoWindow();
@@ -61,8 +67,12 @@ $( document ).on( "pagecreate", "#map-page", function() {
     var autocomplete1 = new google.maps.places.Autocomplete(start);
     autocomplete1.bindTo('bounds', map);
 
-    var autocomplete2 = new google.maps.places.Autocomplete(end);
+    autocomplete2 = new google.maps.places.Autocomplete(end);
     autocomplete2.bindTo('bounds', map);
+
+    google.maps.event.addListener(autocomplete2, 'place_changed', function() {
+      calcRoute();
+     });
 
     // load vehicle marker the first time
     loadVehicle();
@@ -160,6 +170,7 @@ function calcRoute() { // this is for creating route direction
   var request = {
       origin: start,
       destination: end,
+      provideRouteAlternatives: true,
       travelMode: google.maps.TravelMode.TRANSIT
   };
 

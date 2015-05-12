@@ -5,7 +5,8 @@
     <title>Task13Demo</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style type="text/css">
-      #map-page, #map-canvas { width: 100%; height: 100%; padding: 0;}
+      html, body,#map-page, #map-canvas { height: 100%; padding: 0;}
+
       #panel {
         position: absolute;
         top: 5px;
@@ -49,6 +50,29 @@
         text-overflow: ellipsis;
         width: 400px;
       }
+
+      #directions-panel {
+        height: 100%;
+        float: right;
+        width: 390px;
+        overflow: auto;
+      }
+
+      #map-canvas {
+        margin-right: 400px;
+      }
+
+      @media print {
+        #map-canvas {
+          height: 500px;
+          margin: 0;
+        }
+
+        #directions-panel {
+          float: none;
+          width: auto;
+        }
+      }
     </style>
     <link rel="stylesheet" href="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.css">
     <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Open+Sans:300,400,700">
@@ -62,10 +86,10 @@
     <div data-role="page" id="map-page" data-url="map-page">
           <form class="controls">
             <input type="text" id="start" class="controls" placeholder="Enter your travel origin"/>
-            <input type="text" id="end" class="controls" placeholder="Enter your travel destination" onkeypress="askDirection()"/>
+            <input type="text" id="end" class="controls" placeholder="Enter your travel destination"/>
           </form>
-        <div data-role="header" data-theme="a"><h1>MainPage</h1></div>
-        <div role="main" class="ui-content" id="map-canvas"></div>
-    </div>
+          <div role="main" class="ui-content" id="map-canvas"></div>
+          <div id="directions-panel"></div>        
+    </div>    
   </body>
 </html>
