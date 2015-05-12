@@ -98,7 +98,7 @@ function loadVehicle(rt){ // this for running the bus real time tracking
   } else {
     for (var i = 0; i < rt.length; i++) {
       bus_route += rt[i];
-      if (i === 0 || i === rt.length ){
+      if (i != 0 || i != rt.length ){
         bus_route += ",";
       }
     }
@@ -181,22 +181,26 @@ function calcRoute() { // this is for creating route direction
       //var warnings = document.getElementById('warnings_panel');
       //warnings.innerHTML = '<b>' + response.routes[0].warnings + '</b>';
 
-      var myRt = response.routes[0].legs[0];
-
+      var multiRt = response.routes;
       var rt=[];
       var j = 0;
-      for (var i =0; i < myRt.steps.length; i++) {
-        if (myRt.steps[i].travel_mode === "TRANSIT") {
-          rt[j] = myRt.steps[i].transit.line.short_name;
-          j += 1;
+
+      for (var i = 0; i < multiRt.length; i++) {
+        var myRt = multiRt[i].legs[0];
+                
+        for (var k =0; k < myRt.steps.length; k++) {
+          if (myRt.steps[k].travel_mode === "TRANSIT") {
+            rt[j] = myRt.steps[k].transit.line.short_name;
+            j += 1;
+          }
         }
-      }
+      } 
 
       // clear old interval
       window.clearInterval(interval);
 
       // clear all previous bus marker
-      for (i = 0; i < markerArray.length; i++) {
+      for (var i = 0; i < markerArray.length; i++) {
           markerArray[i].setMap(null);
         }
 
@@ -208,8 +212,6 @@ function calcRoute() { // this is for creating route direction
 
       directionsDisplay.setDirections(response);
       showSteps(response);
-
-
     }
   });
 }
