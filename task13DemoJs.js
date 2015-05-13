@@ -14,9 +14,9 @@ function padDigits(number, digits) {
 }
 
 $( document ).on( "pagecreate", "#map-page", function() {
-
-    var defaultLatLng = new google.maps.LatLng(40.440876, -79.9497555);  // Default to Pittsburgh
-    
+    // default location for pittsburgh
+    var defaultLatLng = new google.maps.LatLng(40.440876, -79.9497555);
+    // Getting current location
     if ( navigator.geolocation ) {
         function success(pos) {
             // Location found, show map with these coordinates
@@ -32,7 +32,7 @@ $( document ).on( "pagecreate", "#map-page", function() {
     } else {
         drawMap(defaultLatLng);  // No geolocation support, show default map
     }
-
+    // Drawing Google Map
     function drawMap(latlng) {
         var myOptions = {
             zoom: 12,
@@ -53,38 +53,36 @@ $( document ).on( "pagecreate", "#map-page", function() {
 
     	  // Instantiate an info window to hold step text.
     	  stepDisplay = new google.maps.InfoWindow();
-
+        // Retrieving User Travel Origins and Destination Input Box
         var start = (document.getElementById('start'));
         var end = (document.getElementById('end'));
-
+        // Embed it within Google Maps
         map.controls[google.maps.ControlPosition.TOP_LEFT].push(start);
         map.controls[google.maps.ControlPosition.TOP_LEFT].push(end);
-
+        // Embed Menu button panel within google Maps
         map.controls[google.maps.ControlPosition.TOP_RIGHT].push(btnPanel);
-
+        // Link the input box with google Autocomplete API to retrieve address suggestions
         var autocomplete1 = new google.maps.places.Autocomplete(start);
         autocomplete1.bindTo('bounds', map);
 
         autocomplete2 = new google.maps.places.Autocomplete(end);
         autocomplete2.bindTo('bounds', map);
-
+        // If a user select a destination create a google direction line in the map
         google.maps.event.addListener(autocomplete2, 'place_changed', function() {
           calcRoute();
          });
 
-        /*google.maps.event.addDomListener(document.getElementById('directions-panel'), 'click',
-        calcRoute);*/
-
         // load vehicle marker the first time
         loadVehicle();
-        
+        // Set new vehicle marker every ten secs
     		this.interval = setInterval(function(){loadVehicle(); },10000);
-
+        // Add time list on departure and arrival time select box in menu panel
         addTimeOpt();
     }
 });
 
 function addTimeOpt() {
+  // This function is to add option lists of travel departure and arrival time
   var depart = document.getElementById('depart');
   var arrive = document.getElementById('arrive');
 
@@ -110,14 +108,14 @@ function addTimeOpt() {
   }
 }
 
-function loadVehicle(rt){ // this for running the bus real time tracking
-
+function loadVehicle(rt){ 
+  // this function for running the bus real time tracking
   var pac_api = "http://realtime.portauthority.org/bustime/api/v2/getvehicles?key=8WhZtp3KqS6hSc4MBriZeA6uq&format=json&rt=";
 
   var bus_route="";
 
   if (!rt) {
-    bus_route = "61A";
+    bus_route = "61A"; // default bus real time marker for first loading
   } else {
     for (var i = 0; i < rt.length; i++) {
       bus_route += rt[i];
@@ -127,8 +125,9 @@ function loadVehicle(rt){ // this for running the bus real time tracking
     }
   }
 
-  pac_api += bus_route;  
+  pac_api += bus_route;
 
+  // Get json object from PAAC API Vehicle Location Tracking
 	jQuery.ajax(
 		pac_api,
 		{
@@ -139,14 +138,15 @@ function loadVehicle(rt){ // this for running the bus real time tracking
 			},
 			success: function(data, textStatus, jqXHR) {					
 				vehicle = data["bustime-response"].vehicle;
-
+      // Create a bus marker for each route
+      // First clear previous marker from the map  
 			for (i = 0; i < markerArray.length; i++) {
     			markerArray[i].setMap(null);
   			}
 
-      // Now, clear the array itself.
+      // Now, clear array of marker objects
       markerArray = [];
-
+      // Create new marker for each bus
 			for (var i = 0; i < vehicle.length; i++) {
 				var icon_url = "https://chart.googleapis.com/chart?chst=d_bubble_icon_text_small&chld=bus" 
 								+ "|bbT|" + vehicle[i].rt + "|FFBB00|000000";
@@ -163,21 +163,21 @@ function loadVehicle(rt){ // this for running the bus real time tracking
 	);
 }
 
-function calcRoute() { // this is for creating route direction
-
+function calcRoute() { 
+  // this is for creating route direction
   // First, remove any existing markers from the map.
   for (var i = 0; i < markerArray1.length; i++) {
     markerArray1[i].setMap(null);
   }
 
-  // Now, clear the array itself.
+  // Now, clear array of bus marker objects
   markerArray1 = [];
-
+  // Retrieve time departure
   var departure = document.getElementById('depart').value;
 
-  if (departure == "Now") {
+  if (departure == "Now") { // If user pick now get current time
     var departureTime = new Date();
-  } else {
+  } else { // Prepare time object for departure
     var bits = departure.split(':');
     var now = new Date();
 
@@ -193,11 +193,10 @@ function calcRoute() { // this is for creating route direction
     var departureTime = new Date(ms);
   }
 
-  // Retrieve the start and end locations and create
-  // a DirectionsRequest using TRANSIT directions.
+  // Retrieve the start and end locations
   var start = document.getElementById('start').value;
   var end = document.getElementById('end').value;
-
+  // Create a DirectionsRequest using TRANSIT directions with departure time
   var request = {
       origin: start,
       destination: end,
@@ -207,10 +206,10 @@ function calcRoute() { // this is for creating route direction
         departureTime: departureTime
       }
   };
-
+  // Retrieve arrival time preference
   var arrival = document.getElementById('arrive').value;
 
-  if (arrival != "None") {
+  if (arrival != "None") { // If user not selecting none use arrival time instead of departure time
     var bits = arrival.split(':');
     var now = new Date();
 
@@ -224,7 +223,7 @@ function calcRoute() { // this is for creating route direction
     }*/
 
     var arrivalTime = new Date(ms);
-
+    // Create a DirectionsRequest using TRANSIT directions with arrival time
     var request = {
       origin: start,
       destination: end,
@@ -247,7 +246,7 @@ function calcRoute() { // this is for creating route direction
       var multiRt = response.routes;
       var rt=[];
       var j = 0;
-
+      
       for (var i = 0; i < multiRt.length; i++) {
         var myRt = multiRt[i].legs[0];
                 
