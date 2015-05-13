@@ -60,6 +60,8 @@ $( document ).on( "pagecreate", "#map-page", function() {
         map.controls[google.maps.ControlPosition.TOP_LEFT].push(start);
         map.controls[google.maps.ControlPosition.TOP_LEFT].push(end);
 
+        map.controls[google.maps.ControlPosition.TOP_RIGHT].push(btnPanel);
+
         var autocomplete1 = new google.maps.places.Autocomplete(start);
         autocomplete1.bindTo('bounds', map);
 
@@ -78,26 +80,32 @@ $( document ).on( "pagecreate", "#map-page", function() {
         
     		this.interval = setInterval(function(){loadVehicle(); },10000);
 
-        addDepart();
+        addTimeOpt();
     }
 });
 
-function addDepart() {
+function addTimeOpt() {
   var depart = document.getElementById('depart');
-  var time = new Date();
-  nowHours = padDigits(time.getHours(),2);
-  nowMin = padDigits(time.getMinutes(),2);
-  var current = nowHours + ":" + nowMin;
+  var arrive = document.getElementById('arrive');
+
   for (var i = 0; i < 24; i++) {
+    if (i > 11) {
+        z = i - 12;
+        z = z < 10 ? '0' + z : z;
+        amPM = " PM";
+      } else {
+        z = i < 10 ? '0' + i : i;
+        amPM = " AM"
+      }
     for (var j = 0; j < 60; j += 1) {
       var x = i < 10 ? '0' + i : i;
       var y = j < 10 ? '0' + j : j;
-      dptTime = x + ':' + y;
-      if ( dptTime === current ) {
-        depart.innerHTML += '<option value =' + dptTime + ' selected>' + dptTime + '</option>';
-      } else {
-        depart.innerHTML += '<option value =' + dptTime + '>' + dptTime + '</option>';
-      }
+
+      timeVal = x + ':' + y;
+      timeOpt = z + ':' + y + amPM;
+      
+      depart.innerHTML += '<option value=\"'+ timeVal+ '\">' + timeOpt + '</option>';
+      arrive.innerHTML += '<option value=\"'+ timeVal+ '\">' + timeOpt + '</option>';
     }
   }
 }
@@ -166,24 +174,30 @@ function calcRoute() { // this is for creating route direction
   markerArray1 = [];
 
   var departure = document.getElementById('depart').value;
-  var bits = departure.split(':');
-  var now = new Date();
 
-  var time = new Date();
-  time.setHours(bits[0]);
-  time.setMinutes(bits[1]);
+  if (departure == "Now") {
+    var departureTime = new Date();
+  } else {
+    var bits = departure.split(':');
+    var now = new Date();
 
-  var ms = time.getTime();
-  /*if (ms < now.getTime()) {
-    ms += 24 * 60 * 60 * 1000;
-  }*/
+    var time = new Date();
+    time.setHours(bits[0]);
+    time.setMinutes(bits[1]);
 
-  var departureTime = new Date(ms);
+    var ms = time.getTime();
+    /*if (ms < now.getTime()) {
+      ms += 24 * 60 * 60 * 1000;
+    }*/
+
+    var departureTime = new Date(ms);
+  }
 
   // Retrieve the start and end locations and create
-  // a DirectionsRequest using WALKING directions.
+  // a DirectionsRequest using TRANSIT directions.
   var start = document.getElementById('start').value;
   var end = document.getElementById('end').value;
+
   var request = {
       origin: start,
       destination: end,
@@ -194,9 +208,38 @@ function calcRoute() { // this is for creating route direction
       }
   };
 
-  // Route the directions and pass the response to a
-  // function to create markers for each step.
-  directionsService.route(request, function(response, status) {
+  var arrival = document.getElementById('arrive').value;
+
+  if (arrival != "None") {
+    var bits = arrival.split(':');
+    var now = new Date();
+
+    var time = new Date();
+    time.setHours(bits[0]);
+    time.setMinutes(bits[1]);
+
+    var ms = time.getTime();
+    /*if (ms < now.getTime()) {
+      ms += 24 * 60 * 60 * 1000;
+    }*/
+
+    var arrivalTime = new Date(ms);
+
+    var request = {
+      origin: start,
+      destination: end,
+      provideRouteAlternatives: true,
+      travelMode: google.maps.TravelMode.TRANSIT,
+      transitOptions: {
+        arrivalTime: arrivalTime
+      }
+    };
+  }
+  
+
+    // Route the directions and pass the response to a
+    // function to create markers for each step.
+    directionsService.route(request, function(response, status) {
     if (status == google.maps.DirectionsStatus.OK) {
       //var warnings = document.getElementById('warnings_panel');
       //warnings.innerHTML = '<b>' + response.routes[0].warnings + '</b>';

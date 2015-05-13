@@ -26,7 +26,7 @@
         margin-left: 12px;
         padding: 0 11px 0 13px;
         text-overflow: ellipsis;
-        width: 400px;
+        width: 300px;
       }
 
       #end {
@@ -37,29 +37,13 @@
         margin-left: 12px;
         padding: 0 11px 0 13px;
         text-overflow: ellipsis;
-        width: 400px;
-      }
-
-      #directions-panel {
-        height: 100%;
-        float: right;
-        width: 390px;
-        overflow: auto;
-      }
-
-      #map-canvas {
-        margin-right: 400px;
+        width: 300px;
       }
 
       @media print {
         #map-canvas {
           height: 500px;
           margin: 0;
-        }
-
-        #directions-panel {
-          float: none;
-          width: auto;
         }
       }
     </style>
@@ -72,19 +56,27 @@
     <script type="text/javascript" src="task13DemoJs.js"></script>
   </head>
   <body>
+    <form class="controls">
+      <input type="text" id="start" class="controls" placeholder="Enter your travel origin"/>
+      <input type="text" id="end" class="controls" placeholder="Enter your travel destination"/>
+    </form>
+    <a href="#directions-panel" class="ui-btn ui-shadow ui-corner-all ui-btn-inline ui-btn-mini" id="btnPanel">Menu</a>
     <div data-role="page" id="map-page" data-url="map-page">
-          <form class="controls">
-            <input type="text" id="start" class="controls" placeholder="Enter your travel origin"/>
-            <input type="text" id="end" class="controls" placeholder="Enter your travel destination"/>
-          </form>
-          <div id="directions-panel">
-            <div>
-               <label for="depart" class="select">Depart by:</label>
-               <select name="depart" id="depart">
-               </select>
-            </div>
-          </div> 
-          <div role="main" class="ui-content" id="map-canvas"></div>                 
+      <div data-role="panel" id="directions-panel" data-position="right" data-display="overlay" class="ui-panel ui-panel-position-right ui-panel-display-overlay ui-body-b ui-panel-animate ui-panel-open">
+        <div data-role="fieldcontain">
+            <label for="depart" class="select">Depart By:</label>
+            <select name="depart" id="depart">
+              <option value="Now" selected="Selected">Now</option>
+            </select>
+        </div>
+        <div data-role="fieldcontain">
+            <label for="depart" class="select">Arrive By:</label>
+            <select name="arrive" id="arrive">
+              <option value="None" selected="Selected">None</option>
+            </select>
+        </div>
+      </div>   
+      <div role="main" class="ui-content" id="map-canvas"></div>                 
     </div>    
   </body>
 </html>
