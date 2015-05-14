@@ -9,6 +9,87 @@ var markerArray1 = [];
 var interval;
 var autocomplete2;
 
+// Set the center as Firebase HQ
+var locations = {
+  "Pittsburgh": [40.440876, -79.9497555]
+};
+
+var center = locations["Pittsburgh"];
+var pittsburgh_bounds = new google.maps.LatLngBounds(new google.maps.LatLng(40.323977, -80.291903), new google.maps.LatLng(40.540356, -79.616930))
+
+// Query radius
+var radiusInKm = 1.5;
+var vehiclesInQuery = {};
+var geoQueries = [];
+
+function addFirebaseRef(url) {
+  // Get a reference to the Firebase public transit open data set
+  var transitFirebaseRef = new Firebase(url)
+
+  // Create a new GeoFire instance, pulling data from the public transit data
+  var geoFire = new GeoFire(transitFirebaseRef.child("_geofire"));
+
+  // Create a new GeoQuery instance
+  var geoQuery = geoFire.query({
+    center: center,
+    radius: radiusInKm
+  });
+  geoQueries.push(geoQuery);
+
+  /* Adds new vehicle markers to the map when they enter the query */
+  geoQuery.on("key_entered", function(vehicleId, vehicleLocation) {
+    // Specify that the vehicle has entered this query
+    dataset = vehicleId.split(":")[0];
+    vehicleIdWithoutDataset = vehicleId.split(":")[1];
+    vehiclesInQuery[vehicleId] = true;
+
+    // Look up the vehicle's data in the Transit Open Data Set
+    transitFirebaseRef.child(dataset).child("vehicles").child(vehicleIdWithoutDataset).once("value", function(dataSnapshot) {
+      // Get the vehicle data from the Open Data Set
+      vehicle = dataSnapshot.val();
+
+      // If the vehicle has not already exited this query in the time it took to look up its data in the Open Data
+      // Set, add it to the map
+      if (vehicle !== null && vehiclesInQuery[vehicleId] === true) {
+        // Add the vehicle to the list of vehicles in the query
+        vehiclesInQuery[vehicleId] = vehicle;
+
+        // Create a new marker for the vehicle
+        vehicle.marker = createVehicleMarker(vehicle, getVehicleColor(vehicle));
+      }
+    });
+  });
+
+  /* Moves vehicles markers on the map when their location within the query changes */
+  geoQuery.on("key_moved", function(vehicleId, vehicleLocation) {
+    // Get the vehicle from the list of vehicles in the query
+    var vehicle = vehiclesInQuery[vehicleId];
+
+    // Animate the vehicle's marker
+    if (typeof vehicle !== "undefined" && typeof vehicle.marker !== "undefined") {
+      vehicle.marker.animatedMoveTo(vehicleLocation);
+    }
+  });
+
+  /* Removes vehicle markers from the map when they exit the query */
+  geoQuery.on("key_exited", function(vehicleId, vehicleLocation) {
+    // Get the vehicle from the list of vehicles in the query
+    var vehicle = vehiclesInQuery[vehicleId];
+
+    // If the vehicle's data has already been loaded from the Open Data Set, remove its marker from the map
+    if (vehicle !== true) {
+      vehicle.marker.setMap(null);
+    }
+
+    // Remove the vehicle from the list of vehicles in the query
+    delete vehiclesInQuery[vehicleId];
+  });
+}
+
+addFirebaseRef("https://publicdata-transit.firebaseio.com/");
+addFirebaseRef("https://alpire.firebaseio.com/");
+
+
 function padDigits(number, digits) {
     return Array(Math.max(digits - String(number).length + 1, 0)).join(0) + number;
 }
@@ -34,14 +115,28 @@ $( document ).on( "pagecreate", "#map-page", function() {
     }
     // Drawing Google Map
     function drawMap(latlng) {
+      if(typeof(Storage) !== "undefined") {
+          var saved_loc = localStorage['center']
+          if(typeof saved_loc !== "undefined" && saved_loc !== null) {
+            center = saved_loc.slice(1, saved_loc.length - 1).split(',')
+          }
+        }
+
+        // Get the location as a Google Maps latitude-longitude object
+        var loc = new google.maps.LatLng(center[0], center[1]);
+
+        if(!pittsburgh_bounds.contains(loc)) {
+          loc = locations["Pittsburgh"];
+        }
         var myOptions = {
             zoom: 12,
-            center: latlng,
+            center: loc,
             disableDefaultUI: true,
             mapTypeId: google.maps.MapTypeId.ROADMAP
         };
+        location_overlay = new LocationOverlay(map);
 
-        this.map = new google.maps.Map(document.getElementById("map-canvas"), myOptions);
+        map = new google.maps.Map(document.getElementById("map-canvas"), myOptions);
 
         // Create the DIV to hold the control and
         // call the CenterControl() constructor passing
@@ -82,10 +177,26 @@ $( document ).on( "pagecreate", "#map-page", function() {
           calcRoute();
          });
 
+         var updateCriteria = _.debounce(function() {
+    var bounds = map.getBounds();
+    if(typeof(Storage) !== "undefined") {
+      localStorage.setItem("center", bounds.getCenter());
+    }
+    var criteria = {
+      center: [bounds.getCenter().lat(), bounds.getCenter().lng()],
+      radius: Math.min(getDistance(bounds.getNorthEast(), bounds.getSouthWest()) / 2 / 1000, 25)
+    };
+    for(geoQuery in geoQueries) {
+      geoQueries[geoQuery].updateCriteria(criteria);
+    }
+  }, 10);
+
+  google.maps.event.addListener(map, "bounds_changed", updateCriteria);
+
         // load vehicle marker the first time
-        loadVehicle();
+        // loadVehicle();
         // Set new vehicle marker every ten secs
-    		this.interval = setInterval(function(){loadVehicle(); },10000);
+    		// this.interval = setInterval(function(){loadVehicle(); },10000);
         // Add time list on departure and arrival time select box in menu panel
         addTimeOpt();
     }
@@ -277,10 +388,10 @@ function calcRoute() {
         }
 
       // load vehicle marker the first time
-      loadVehicle(rt);
+      //loadVehicle(rt);
 
       // load vehicle marker using timer
-      this.interval = setInterval(function(){loadVehicle(rt); },10000);
+      //this.interval = setInterval(function(){loadVehicle(rt); },10000);
 
       directionsDisplay.setDirections(response);
       //showSteps(response);
@@ -346,3 +457,260 @@ function CenterControl(controlDiv, map, position) {
   });
 
 }
+
+
+/**********************/
+/*  HELPER FUNCTIONS  */
+/**********************/
+/* Adds a marker for the inputted vehicle to the map */
+function createVehicleMarker(vehicle, vehicleColor) {
+  var icon_url;
+  if(typeof vehicle.vtype !== "undefined") {
+    icon_url = "https://chart.googleapis.com/chart?chst=d_bubble_icon_text_small&chld=" + vehicle.vtype + "|bbT|" + vehicle.routeTag + "|" + vehicleColor + "|eee";
+  } else {
+    icon_url = "https://chart.googleapis.com/chart?chst=d_bubble_text_small&chld=bbT|" + vehicle.routeTag + "|" + vehicleColor + "|eee";
+  }
+  var marker = new google.maps.Marker({
+    icon: icon_url,
+    position: new google.maps.LatLng(vehicle.lat, vehicle.lon),
+    optimized: true,
+    map: map
+  });
+
+  return marker;
+}
+
+function getVehicleColor(vehicle) {
+  return getColor(vehicle.routeTag);
+}
+
+/* Returns true if the two inputted coordinates are approximately equivalent */
+function coordinatesAreEquivalent(coord1, coord2) {
+  return (Math.abs(coord1 - coord2) < 0.000001);
+}
+
+/* Animates the Marker class (based on https://stackoverflow.com/a/10906464) */
+google.maps.Marker.prototype.animatedMoveTo = function(newLocation) {
+  var toLat = newLocation[0];
+  var toLng = newLocation[1];
+
+  var fromLat = this.getPosition().lat();
+  var fromLng = this.getPosition().lng();
+
+  if (!coordinatesAreEquivalent(fromLat, toLat) || !coordinatesAreEquivalent(fromLng, toLng)) {
+    var percent = 0;
+    var latDistance = toLat - fromLat;
+    var lngDistance = toLng - fromLng;
+    var interval = window.setInterval(function () {
+      percent += 0.01;
+      var curLat = fromLat + (percent * latDistance);
+      var curLng = fromLng + (percent * lngDistance);
+      var pos = new google.maps.LatLng(curLat, curLng);
+      this.setPosition(pos);
+      if (percent >= 1) {
+        window.clearInterval(interval);
+      }
+    }.bind(this), 50);
+  }
+};
+
+var rad = function(x) {
+  return x * Math.PI / 180;
+};
+
+var getDistance = function(p1, p2) {
+  var R = 6378137; // Earth’s mean radius in meter
+  var dLat = rad(p2.lat() - p1.lat());
+  var dLong = rad(p2.lng() - p1.lng());
+  var a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(rad(p1.lat())) * Math.cos(rad(p2.lat())) *
+    Math.sin(dLong / 2) * Math.sin(dLong / 2);
+  var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  var d = R * c;
+  return d; // returns the distance in meter
+};
+    
+    var baseline = '0'.charCodeAt(0)
+    String.prototype.hashCode = function()
+    {
+        var hash = 0.1;
+        if (this.length === 0) return hash;
+        for (var i = 0; i < this.length; i++) {
+            var character  = this.charCodeAt(i) - baseline;
+            hash += Math.pow(2, -i)*(character%8)/8
+        }
+        hash = hash % 1.0
+        hash = Math.max(0, Math.min(1, Math.abs(hash)));
+        return hash;
+    }
+    
+    /**
+     * Converts an HSL color value to RGB. Conversion formula
+     * adapted from http://en.wikipedia.org/wiki/HSL_color_space.
+     * Assumes h, s, and l are contained in the set [0, 1] and
+     * returns r, g, and b in the set [0, 255].
+     *
+     * @param   Number  h       The hue
+     * @param   Number  s       The saturation
+     * @param   Number  l       The lightness
+     * @return  Array           The RGB representation
+     */
+    function hslToRgb(h, s, l){
+        var r, g, b;
+    
+        if(s == 0){
+            r = g = b = l; // achromatic
+        }else{
+            function hue2rgb(p, q, t){
+                if(t < 0) t += 1;
+                if(t > 1) t -= 1;
+                if(t < 1/6) return p + (q - p) * 6 * t;
+                if(t < 1/2) return q;
+                if(t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+                return p;
+            }
+    
+            var q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+            var p = 2 * l - q;
+            r = hue2rgb(p, q, h + 1/3);
+            g = hue2rgb(p, q, h);
+            b = hue2rgb(p, q, h - 1/3);
+        }
+    
+        return [(r * 255), (g * 255), (b * 255)];
+    }
+    
+    function decToHex(i)
+    {
+        return (Math.floor(i)+0x10000).toString(16).substr(-2).toUpperCase();
+    }
+    
+    function getColor(tag)
+    {
+        code = tag.hashCode()
+        
+        if(code > 0.05 && code < 0.25)
+        {
+            code += 0.6;
+        } 
+        colors = hslToRgb(code, 0.6, 0.5);
+        color = ""+decToHex(colors[0])+decToHex(colors[1])+decToHex(colors[2])
+        
+        //console.log(tag + " " + color + " " + code)
+        return color;
+    }
+
+LocationOverlay.prototype = new google.maps.OverlayView();
+
+function LocationOverlay(map) {
+  this.map_ = map;
+  this.div_ = null;
+  this.location_ = null;
+  this.accuracy_ = null;
+  this.setMap(map);
+}
+
+LocationOverlay.prototype.onAdd = function() {
+  this.div_ = document.getElementById('location_overlay')
+
+  var div = document.createElement('div');
+  div.className = 'widget-mylocation-map-effect-holder';
+  div.style.border = 'none';
+  div.style.borderWidth = '0px';
+  div.style.position = 'absolute';
+  div.style.visibility = 'hidden';
+
+
+  var div2 = document.createElement('div');
+  div2.className = 'widget-mylocation-map-effect'
+
+  var div3 = document.createElement('div');
+  div3.className = 'widget-mylocation-map-effect-pulse'
+
+  div.appendChild(div2);
+  div.appendChild(div3);
+  this.div_ = div;
+
+  var panes = this.getPanes();
+  panes.overlayImage.appendChild(this.div_);
+};
+
+LocationOverlay.prototype.updateLocation = function(location, accuracy) {
+  this.location_ = location;
+  this.accuracy_ = accuracy;
+  this.draw();
+}
+
+LocationOverlay.prototype.draw = function() {
+  if(this.location_ !== null) {
+    var overlayProjection = this.getProjection();
+    var position = overlayProjection.fromLatLngToDivPixel(this.location_);
+    var div = this.div_;
+    div.style.left = (position.x) + 'px';
+    div.style.top = (position.y) + 'px';
+
+    var circle = new google.maps.Circle({
+      center: this.location_,
+      radius: this.accuracy_,
+      map: this.map,
+      fillOpacity: 0,
+      strokeOpacity: 0
+    });
+
+    var length = Math.abs(overlayProjection.fromLatLngToDivPixel(circle.getBounds().getSouthWest()).x - overlayProjection.fromLatLngToDivPixel(circle.getBounds().getNorthEast()).x);
+
+    var dot = this.div_.childNodes[0];
+    dot.style.left = '-6.5px';
+    dot.style.top = '-6.5px';
+    dot.style.position = 'absolute';
+
+    var pulse = this.div_.childNodes[1];
+    pulse.style.width = length + 'px';
+    pulse.style.height = length + 'px';
+    pulse.style.borderRadius = length + 'px';
+    pulse.style.left = -length / 2.0 + 'px';
+    pulse.style.top = -length / 2.0 + 'px';
+
+    this.map_.panTo(circle.getCenter());
+  }
+};
+
+LocationOverlay.prototype.onRemove = function() {
+  this.div_.parentNode.removeChild(this.div_);
+};
+
+
+LocationOverlay.prototype.hide = function() {
+  if (this.div_) {
+    this.div_.style.visibility = 'hidden';
+  }
+};
+
+LocationOverlay.prototype.show = function() {
+  if (this.div_) {
+    this.div_.style.visibility = 'visible';
+  }
+};
+
+LocationOverlay.prototype.toggle = function() {
+  if (this.div_) {
+    if (this.div_.style.visibility == 'hidden') {
+      this.show();
+    } else {
+      this.hide();
+    }
+  }
+};
+
+// Detach the map from the DOM via toggleDOM().
+// Note that if we later reattach the map, it will be visible again,
+// because the containing <div> is recreated in the overlay's onAdd() method.
+LocationOverlay.prototype.toggleDOM = function() {
+  if (this.getMap()) {
+    // Note: setMap(null) calls OverlayView.onRemove()
+    this.setMap(null);
+  } else {
+    this.setMap(this.map_);
+  }
+};
+
