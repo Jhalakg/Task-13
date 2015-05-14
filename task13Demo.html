@@ -28,7 +28,7 @@
         margin-left: 12px;
         padding: 0 11px 0 13px;
         text-overflow: ellipsis;
-        width: 300px;
+        width: 200px;
       }
 
       #end {
@@ -39,7 +39,7 @@
         margin-left: 12px;
         padding: 0 11px 0 13px;
         text-overflow: ellipsis;
-        width: 300px;
+        width: 200px;
       }
 
       @media print {
@@ -57,6 +57,10 @@
     <script type="text/javascript" src="task13DemoJs.js"></script>
   </head>
   <body>
+    <form>
+      <input type="search" id="start" class="controls" value="" placeholder="Enter your travel origin"/>
+      <input type="search" id="end" class="controls" value="" placeholder="Enter your travel destination"/>
+    </form>
     <a href="#directions-panel" class="ui-btn ui-shadow ui-corner-all ui-btn-icon-notext ui-icon-bars" id="btnPanel">
     </a>
     <div data-role="page" id="map-page" data-url="map-page">
