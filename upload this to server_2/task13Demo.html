@@ -7,40 +7,7 @@
     <style type="text/css">
       html, body,#map-page, #map-canvas { height: 100%; padding: 0;}
 
-      .controls {
-        margin-top: 16px;
-        border: 1px solid transparent;
-        border-radius: 2px 0 0 2px;
-        box-sizing: border-box;
-        -moz-box-sizing: border-box;
-        height: 32px;
-        outline: box;
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
-        position: relative;
-      }
-    
-    
-      #start {
-        background-color: #fff;
-        font-family: Roboto;
-        font-size: 15px;
-        font-weight: 300;
-        margin-left: 12px;
-        padding: 0 11px 0 13px;
-        text-overflow: ellipsis;
-        width: 200px;
-      }
-
-      #end {
-        background-color: #fff;
-        font-family: Roboto;
-        font-size: 15px;
-        font-weight: 300;
-        margin-left: 12px;
-        padding: 0 11px 0 13px;
-        text-overflow: ellipsis;
-        width: 200px;
-      }
+      div.ui-input-search { width: 400px !important }
 
       @media print {
         #map-canvas {
@@ -66,13 +33,13 @@
     <script type="text/javascript" src="js/task13DemoJs.js"></script>
   </head>
   <body>
-    <form>
-      <input type="search" id="start" class="controls" value="" placeholder="Enter your travel origin"/>
-      <input type="search" id="end" class="controls" value="" placeholder="Enter your travel destination"/>
-    </form>
     <a href="#directions-panel" class="ui-btn ui-shadow ui-corner-all ui-btn-icon-notext ui-icon-bars" id="btnPanel">
     </a>
     <div data-role="page" id="map-page" data-url="map-page">
+      <form>
+        <input type="search" id="start" class="controls" value="" placeholder="Enter your travel origin"/>
+        <input type="search" id="end" class="controls" value="" placeholder="Enter your travel destination"/>
+      </form>
       <div data-role="panel" id="directions-panel" data-position="right" data-display="overlay" class="ui-panel ui-panel-position-right ui-panel-display-overlay ui-panel-animate ui-panel-open">
         <a href="" data-rel="close" data-role="button" data-inline="true" data-corners="true" 
           data-shadow="true" data-iconshadow="true" data-wrapperels="span" 

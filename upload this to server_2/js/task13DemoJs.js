@@ -8,6 +8,7 @@ var stepDisplay;
 var markerArray1 = [];
 var interval;
 var autocomplete2;
+var geocoder = new google.maps.Geocoder();
 // this script is courtesy of pitlivebuss.com 
 // Set the center as Firebase HQ
 var locations = {
@@ -116,23 +117,17 @@ $( document ).on( "pagecreate", "#map-page", function() {
     // Drawing Google Map
     function drawMap(latlng) {
       // this script is courtesy of pitlivebuss.com
-      if(typeof(Storage) !== "undefined") {
-          var saved_loc = localStorage['center']
-          if(typeof saved_loc !== "undefined" && saved_loc !== null) {
-            center = saved_loc.slice(1, saved_loc.length - 1).split(',')
-          }
-        }
 
         // Get the location as a Google Maps latitude-longitude object
-        var loc = new google.maps.LatLng(center[0], center[1]);
+        var loc = latlng;
 
-        if(!pittsburgh_bounds.contains(loc)) {
+        if(!pittsburgh_bounds.contains(latlng)) {
           loc = locations["Pittsburgh"];
         }
         // this script is courtesy of pitlivebuss.com
 
         var myOptions = {
-            zoom: 15,
+            zoom: 16,
             center: loc,
             disableDefaultUI: true,
             mapTypeId: google.maps.MapTypeId.ROADMAP
@@ -165,8 +160,8 @@ $( document ).on( "pagecreate", "#map-page", function() {
         var start = (document.getElementById('start'));
         var end = (document.getElementById('end'));
         // Embed it within Google Maps
-        map.controls[google.maps.ControlPosition.TOP_LEFT].push(start);
-        map.controls[google.maps.ControlPosition.TOP_LEFT].push(end);
+        //map.controls[google.maps.ControlPosition.TOP_LEFT].push(start);
+        //map.controls[google.maps.ControlPosition.TOP_LEFT].push(end);
         // Embed Menu button panel within google Maps
         map.controls[google.maps.ControlPosition.TOP_RIGHT].push(btnPanel);
         // Link the input box with google Autocomplete API to retrieve address suggestions
@@ -203,6 +198,7 @@ $( document ).on( "pagecreate", "#map-page", function() {
     		// this.interval = setInterval(function(){loadVehicle(); },10000);
         // Add time list on departure and arrival time select box in menu panel
         addTimeOpt();
+        codeLatLng(latlng);
     }
 });
 
@@ -220,8 +216,9 @@ function addTimeOpt() {
   var amVal = nowHour < 12 ? 1 : 2;
 
   
-  for (var i = 0; i < 13; i++) {
+  for (var i = 0; i < 24; i++) {
     var x = i < 10 ? '0' + i : i;
+    if (i>12) x = i -12
     if (i == nowHour) {
       hour.innerHTML += '<option value=\"' + i + '\" selected=\"selected\">' + x + '</option>';      
     } else {
@@ -257,6 +254,20 @@ function addTimeOpt() {
 
   var myselect = $("select#ampm");
   myselect.selectmenu("refresh"); 
+}
+
+function codeLatLng(position) {
+  geocoder.geocode({'latLng': position}, function(results, status) {
+    if (status == google.maps.GeocoderStatus.OK) {
+      if (results[1]) {
+        $( "#start" ).val( results[1].formatted_address );
+      } else {
+        alert('No results found');
+      }
+    } else {
+      alert('Geocoder failed due to: ' + status);
+    }
+  });
 }
 
 function loadVehicle(rt){ 
@@ -463,7 +474,8 @@ function CenterControl(controlDiv, map, position) {
 
   // Setup the click event listeners: simply set the map to user location
   google.maps.event.addDomListener(controlUI, 'click', function() {
-    map.setCenter(position)
+    map.setCenter(position);
+    codeLatLng(position);
   });
 
 }
