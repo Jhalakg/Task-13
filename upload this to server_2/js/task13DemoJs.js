@@ -9,7 +9,7 @@ var markerArray1 = [];
 var interval;
 var autocomplete2;
 var geocoder = new google.maps.Geocoder();
-// this script is courtesy of pitlivebuss.com 
+// this script is courtesy of pitlivebus.com
 // Set the center as Firebase HQ
 var locations = {
   "Pittsburgh": [40.440876, -79.9497555]
@@ -89,7 +89,7 @@ function addFirebaseRef(url) {
 
 addFirebaseRef("https://publicdata-transit.firebaseio.com/");
 addFirebaseRef("https://alpire.firebaseio.com/");
-// this script is courtesy of pitlivebuss.com
+// this script is courtesy of pitlivebus.com
 
 function padDigits(number, digits) {
     return Array(Math.max(digits - String(number).length + 1, 0)).join(0) + number;
@@ -116,7 +116,7 @@ $( document ).on( "pagecreate", "#map-page", function() {
     }
     // Drawing Google Map
     function drawMap(latlng) {
-      // this script is courtesy of pitlivebuss.com
+      // this script is courtesy of pitlivebus.com
 
         // Get the location as a Google Maps latitude-longitude object
         var loc = latlng;
@@ -124,7 +124,7 @@ $( document ).on( "pagecreate", "#map-page", function() {
         if(!pittsburgh_bounds.contains(latlng)) {
           loc = locations["Pittsburgh"];
         }
-        // this script is courtesy of pitlivebuss.com
+        // this script is courtesy of pitlivebus.com
 
         var myOptions = {
             zoom: 16,
@@ -143,7 +143,7 @@ $( document ).on( "pagecreate", "#map-page", function() {
         var centerControl = new CenterControl(centerControlDiv, map, latlng);
 
         centerControlDiv.index = 1;
-        map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(centerControlDiv);
+        map.controls[google.maps.ControlPosition.TOP_CENTER].push(centerControlDiv);
 
     		// Create a renderer for directions and bind it to the map.
     	  var rendererOptions = {
@@ -159,11 +159,14 @@ $( document ).on( "pagecreate", "#map-page", function() {
         // Retrieving User Travel Origins and Destination Input Box
         var start = (document.getElementById('start'));
         var end = (document.getElementById('end'));
+
         // Embed it within Google Maps
         //map.controls[google.maps.ControlPosition.TOP_LEFT].push(start);
         //map.controls[google.maps.ControlPosition.TOP_LEFT].push(end);
+
         // Embed Menu button panel within google Maps
         map.controls[google.maps.ControlPosition.TOP_RIGHT].push(btnPanel);
+
         // Link the input box with google Autocomplete API to retrieve address suggestions
         var autocomplete1 = new google.maps.places.Autocomplete(start);
         autocomplete1.bindTo('bounds', map);
@@ -257,6 +260,7 @@ function addTimeOpt() {
 }
 
 function codeLatLng(position) {
+  // this function to automatically fill travel origin input box with user current position
   geocoder.geocode({'latLng': position}, function(results, status) {
     if (status == google.maps.GeocoderStatus.OK) {
       if (results[1]) {
@@ -271,7 +275,7 @@ function codeLatLng(position) {
 }
 
 function loadVehicle(rt){ 
-  // this function for running the bus real time tracking
+  // this function for running the bus real time tracking -- unused since pac server does not provide header tag of cross server origin
   var pac_api = "http://realtime.portauthority.org/bustime/api/v2/getvehicles?key=8WhZtp3KqS6hSc4MBriZeA6uq&format=json&rt=";
 
   var bus_route="";
@@ -326,7 +330,7 @@ function loadVehicle(rt){
 }
 
 function calcRoute() { 
-  // this is for creating route direction
+  // this function creates route direction
   // First, remove any existing markers from the map.
   for (var i = 0; i < markerArray1.length; i++) {
     markerArray1[i].setMap(null);
@@ -334,6 +338,7 @@ function calcRoute() {
 
   // Now, clear array of bus marker objects
   markerArray1 = [];
+
   // Retrieve time departure
   var hour = document.getElementById('hour').value;
   var minute = document.getElementById('minute').value;
@@ -356,7 +361,7 @@ function calcRoute() {
   check = $( "#nav1" ).hasClass( "ui-btn-active" )
 
   if (check) {
-  // Create a DirectionsRequest using TRANSIT directions with departure time
+    // Create a DirectionsRequest using TRANSIT directions with departure time
     var request = {
         origin: start,
         destination: end,
@@ -367,6 +372,7 @@ function calcRoute() {
         }
     };  
   } else {
+    // Create a DirectionsRequest using TRANSIT directions with arrival time
     var request = {
       origin: start,
       destination: end,
@@ -455,6 +461,7 @@ function CenterControl(controlDiv, map, position) {
   controlUI.style.borderRadius = '3px';
   controlUI.style.boxShadow = '0 2px 6px rgba(0,0,0,.3)';
   controlUI.style.cursor = 'pointer';
+  controlUI.style.marginTop = '10px';
   controlUI.style.marginBottom = '22px';
   controlUI.style.marginRight = '5px';
   controlUI.style.textAlign = 'center';
@@ -465,8 +472,8 @@ function CenterControl(controlDiv, map, position) {
   var controlText = document.createElement('div');
   controlText.style.color = 'rgb(25,25,25)';
   controlText.style.fontFamily = 'Roboto,Arial,sans-serif';
-  controlText.style.fontSize = '16px';
-  controlText.style.lineHeight = '38px';
+  controlText.style.fontSize = '10px';
+  controlText.style.lineHeight = '25px';
   controlText.style.paddingLeft = '5px';
   controlText.style.paddingRight = '5px';
   controlText.innerHTML = 'My Location';
