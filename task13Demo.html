@@ -14,10 +14,12 @@
         box-sizing: border-box;
         -moz-box-sizing: border-box;
         height: 32px;
-        outline: none;
+        outline: box;
         box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+        position: relative;
       }
-
+    
+    
       #start {
         background-color: #fff;
         font-family: Roboto;
@@ -51,18 +53,18 @@
     <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Open+Sans:300,400,700">
     <script src="http://code.jquery.com/jquery.min.js"></script>
     <script src="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
-    <!--script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBHQE7WceflR7Rv5GyQ2v2xmRrZGHZDRU4"></script-->
     <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?v=3.exp&signed_in=true&libraries=places&key=AIzaSyBHQE7WceflR7Rv5GyQ2v2xmRrZGHZDRU4"></script>
     <script type="text/javascript" src="task13DemoJs.js"></script>
   </head>
   <body>
-    <form class="controls">
-      <input type="text" id="start" class="controls" placeholder="Enter your travel origin"/>
-      <input type="text" id="end" class="controls" placeholder="Enter your travel destination"/>
-    </form>
-    <a href="#directions-panel" class="ui-btn ui-shadow ui-corner-all ui-btn-inline ui-btn-mini" id="btnPanel">Menu</a>
+    <a href="#directions-panel" class="ui-btn ui-shadow ui-corner-all ui-btn-icon-notext ui-icon-bars" id="btnPanel">
+    </a>
     <div data-role="page" id="map-page" data-url="map-page">
-      <div data-role="panel" id="directions-panel" data-position="right" data-display="overlay" class="ui-panel ui-panel-position-right ui-panel-display-overlay ui-body-b ui-panel-animate ui-panel-open">
+      <div data-role="panel" id="directions-panel" data-position="right" data-display="overlay" class="ui-panel ui-panel-position-right ui-panel-display-overlay ui-panel-animate ui-panel-open">
+        <a href="" data-rel="close" data-role="button" data-inline="true" data-corners="true" 
+          data-shadow="true" data-iconshadow="true" data-wrapperels="span" 
+          class="ui-btn ui-shadow ui-corner-all ui-btn-icon-notext ui-icon-carat-r">
+        </a>
         <div data-role="fieldcontain">
             <label for="depart" class="select">Depart By:</label>
             <select name="depart" id="depart">
