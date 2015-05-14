@@ -219,30 +219,32 @@ function addTimeOpt() {
   var nowMinute = now.getMinutes();
   var amVal = nowHour < 12 ? 1 : 2;
 
-  var myselect = $("select#hour");
+  
   for (var i = 0; i < 13; i++) {
     var x = i < 10 ? '0' + i : i;
     if (i == nowHour) {
-      hour.innerHTML += '<option value=\"' + i + '\" selected=\"selected\">' + x + '</option>';
-      myselect.selectmenu("refresh");
+      hour.innerHTML += '<option value=\"' + i + '\" selected=\"selected\">' + x + '</option>';      
     } else {
       hour.innerHTML += '<option value=\"' + i + '\">' + x + '</option>';
-    }
-    
+    }    
   }
-  
-  var myselect = $("select#minute");  
+
+  var myselect = $("select#hour");
+  myselect.selectmenu("refresh");  
+    
   for (var j = 0; j < 60; j += 1) {
     var y = j < 10 ? '0' + j : j;
     if (j == nowMinute) {
       minute.innerHTML += '<option value=\"' + j + '\" selected=\"selected\">' + y + '</option>';
-      myselect.selectmenu("refresh");
+      
     } else {
-      hour.innerHTML += '<option value=\"' + j + '\">' + y + '</option>';
+      minute.innerHTML += '<option value=\"' + j + '\">' + y + '</option>';
     }    
   }
 
-  var myselect = $("select#ampm");
+  var myselect = $("select#minute");
+  myselect.selectmenu("refresh");
+
   am.innerHTML += '<option value=\"1\">' + "AM" + '</option>';
   am.innerHTML += '<option value=\"2\">' + "PM" + '</option>';
   if (amVal == 1) {
@@ -250,9 +252,11 @@ function addTimeOpt() {
     myselect.selectmenu("refresh");  
   } else {
     $("#ampm option[value='2']").attr("selected","selected");
-    myselect.selectmenu("refresh");   
+      
   }
   
+  var myselect = $("select#ampm");
+  myselect.selectmenu("refresh"); 
 }
 
 function loadVehicle(rt){ 
