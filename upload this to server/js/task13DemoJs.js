@@ -8,7 +8,7 @@ var stepDisplay;
 var markerArray1 = [];
 var interval;
 var autocomplete2;
-
+// this script is courtesy of pitlivebuss.com 
 // Set the center as Firebase HQ
 var locations = {
   "Pittsburgh": [40.440876, -79.9497555]
@@ -88,7 +88,7 @@ function addFirebaseRef(url) {
 
 addFirebaseRef("https://publicdata-transit.firebaseio.com/");
 addFirebaseRef("https://alpire.firebaseio.com/");
-
+// this script is courtesy of pitlivebuss.com
 
 function padDigits(number, digits) {
     return Array(Math.max(digits - String(number).length + 1, 0)).join(0) + number;
@@ -115,6 +115,7 @@ $( document ).on( "pagecreate", "#map-page", function() {
     }
     // Drawing Google Map
     function drawMap(latlng) {
+      // this script is courtesy of pitlivebuss.com
       if(typeof(Storage) !== "undefined") {
           var saved_loc = localStorage['center']
           if(typeof saved_loc !== "undefined" && saved_loc !== null) {
@@ -128,6 +129,8 @@ $( document ).on( "pagecreate", "#map-page", function() {
         if(!pittsburgh_bounds.contains(loc)) {
           loc = locations["Pittsburgh"];
         }
+        // this script is courtesy of pitlivebuss.com
+
         var myOptions = {
             zoom: 12,
             center: loc,
@@ -176,23 +179,24 @@ $( document ).on( "pagecreate", "#map-page", function() {
         google.maps.event.addListener(autocomplete2, 'place_changed', function() {
           calcRoute();
          });
+        // this script is courtesy of pitlivebus.com
+        var updateCriteria = _.debounce(function() {
+          var bounds = map.getBounds();
+          if(typeof(Storage) !== "undefined") {
+            localStorage.setItem("center", bounds.getCenter());
+          }
+          var criteria = {
+            center: [bounds.getCenter().lat(), bounds.getCenter().lng()],
+            radius: Math.min(getDistance(bounds.getNorthEast(), bounds.getSouthWest()) / 2 / 1000, 25)
+          };
+          for(geoQuery in geoQueries) {
+            geoQueries[geoQuery].updateCriteria(criteria);
+          }
+        }, 10);
 
-         var updateCriteria = _.debounce(function() {
-    var bounds = map.getBounds();
-    if(typeof(Storage) !== "undefined") {
-      localStorage.setItem("center", bounds.getCenter());
-    }
-    var criteria = {
-      center: [bounds.getCenter().lat(), bounds.getCenter().lng()],
-      radius: Math.min(getDistance(bounds.getNorthEast(), bounds.getSouthWest()) / 2 / 1000, 25)
-    };
-    for(geoQuery in geoQueries) {
-      geoQueries[geoQuery].updateCriteria(criteria);
-    }
-  }, 10);
-
-  google.maps.event.addListener(map, "bounds_changed", updateCriteria);
-
+        google.maps.event.addListener(map, "bounds_changed", updateCriteria);
+        // this script is courtesy of pitlivebuss.com
+        
         // load vehicle marker the first time
         // loadVehicle();
         // Set new vehicle marker every ten secs
@@ -458,7 +462,7 @@ function CenterControl(controlDiv, map, position) {
 
 }
 
-
+// this script is courtesy of pitlivebus.com
 /**********************/
 /*  HELPER FUNCTIONS  */
 /**********************/
@@ -530,75 +534,75 @@ var getDistance = function(p1, p2) {
   return d; // returns the distance in meter
 };
     
-    var baseline = '0'.charCodeAt(0)
-    String.prototype.hashCode = function()
-    {
-        var hash = 0.1;
-        if (this.length === 0) return hash;
-        for (var i = 0; i < this.length; i++) {
-            var character  = this.charCodeAt(i) - baseline;
-            hash += Math.pow(2, -i)*(character%8)/8
+var baseline = '0'.charCodeAt(0)
+String.prototype.hashCode = function()
+{
+    var hash = 0.1;
+    if (this.length === 0) return hash;
+    for (var i = 0; i < this.length; i++) {
+        var character  = this.charCodeAt(i) - baseline;
+        hash += Math.pow(2, -i)*(character%8)/8
+    }
+    hash = hash % 1.0
+    hash = Math.max(0, Math.min(1, Math.abs(hash)));
+    return hash;
+}
+    
+/**
+ * Converts an HSL color value to RGB. Conversion formula
+ * adapted from http://en.wikipedia.org/wiki/HSL_color_space.
+ * Assumes h, s, and l are contained in the set [0, 1] and
+ * returns r, g, and b in the set [0, 255].
+ *
+ * @param   Number  h       The hue
+ * @param   Number  s       The saturation
+ * @param   Number  l       The lightness
+ * @return  Array           The RGB representation
+ */
+function hslToRgb(h, s, l){
+    var r, g, b;
+
+    if(s == 0){
+        r = g = b = l; // achromatic
+    }else{
+        function hue2rgb(p, q, t){
+            if(t < 0) t += 1;
+            if(t > 1) t -= 1;
+            if(t < 1/6) return p + (q - p) * 6 * t;
+            if(t < 1/2) return q;
+            if(t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+            return p;
         }
-        hash = hash % 1.0
-        hash = Math.max(0, Math.min(1, Math.abs(hash)));
-        return hash;
+
+        var q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+        var p = 2 * l - q;
+        r = hue2rgb(p, q, h + 1/3);
+        g = hue2rgb(p, q, h);
+        b = hue2rgb(p, q, h - 1/3);
     }
+
+    return [(r * 255), (g * 255), (b * 255)];
+}
+
+function decToHex(i)
+{
+    return (Math.floor(i)+0x10000).toString(16).substr(-2).toUpperCase();
+}
+
+function getColor(tag)
+{
+    code = tag.hashCode()
     
-    /**
-     * Converts an HSL color value to RGB. Conversion formula
-     * adapted from http://en.wikipedia.org/wiki/HSL_color_space.
-     * Assumes h, s, and l are contained in the set [0, 1] and
-     * returns r, g, and b in the set [0, 255].
-     *
-     * @param   Number  h       The hue
-     * @param   Number  s       The saturation
-     * @param   Number  l       The lightness
-     * @return  Array           The RGB representation
-     */
-    function hslToRgb(h, s, l){
-        var r, g, b;
-    
-        if(s == 0){
-            r = g = b = l; // achromatic
-        }else{
-            function hue2rgb(p, q, t){
-                if(t < 0) t += 1;
-                if(t > 1) t -= 1;
-                if(t < 1/6) return p + (q - p) * 6 * t;
-                if(t < 1/2) return q;
-                if(t < 2/3) return p + (q - p) * (2/3 - t) * 6;
-                return p;
-            }
-    
-            var q = l < 0.5 ? l * (1 + s) : l + s - l * s;
-            var p = 2 * l - q;
-            r = hue2rgb(p, q, h + 1/3);
-            g = hue2rgb(p, q, h);
-            b = hue2rgb(p, q, h - 1/3);
-        }
-    
-        return [(r * 255), (g * 255), (b * 255)];
-    }
-    
-    function decToHex(i)
+    if(code > 0.05 && code < 0.25)
     {
-        return (Math.floor(i)+0x10000).toString(16).substr(-2).toUpperCase();
-    }
+        code += 0.6;
+    } 
+    colors = hslToRgb(code, 0.6, 0.5);
+    color = ""+decToHex(colors[0])+decToHex(colors[1])+decToHex(colors[2])
     
-    function getColor(tag)
-    {
-        code = tag.hashCode()
-        
-        if(code > 0.05 && code < 0.25)
-        {
-            code += 0.6;
-        } 
-        colors = hslToRgb(code, 0.6, 0.5);
-        color = ""+decToHex(colors[0])+decToHex(colors[1])+decToHex(colors[2])
-        
-        //console.log(tag + " " + color + " " + code)
-        return color;
-    }
+    //console.log(tag + " " + color + " " + code)
+    return color;
+}
 
 LocationOverlay.prototype = new google.maps.OverlayView();
 
@@ -713,4 +717,4 @@ LocationOverlay.prototype.toggleDOM = function() {
     this.setMap(this.map_);
   }
 };
-
+// this script is courtesy of pitlivebus.com

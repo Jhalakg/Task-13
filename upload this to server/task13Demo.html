@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Task13Demo</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style type="text/css">
+      html, body,#map-page, #map-canvas { height: 100%; padding: 0;}
+
+      .controls {
+        margin-top: 16px;
+        border: 1px solid transparent;
+        border-radius: 2px 0 0 2px;
+        box-sizing: border-box;
+        -moz-box-sizing: border-box;
+        height: 32px;
+        outline: box;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+        position: relative;
+      }
+    
+    
+      #start {
+        background-color: #fff;
+        font-family: Roboto;
+        font-size: 15px;
+        font-weight: 300;
+        margin-left: 12px;
+        padding: 0 11px 0 13px;
+        text-overflow: ellipsis;
+        width: 200px;
+      }
+
+      #end {
+        background-color: #fff;
+        font-family: Roboto;
+        font-size: 15px;
+        font-weight: 300;
+        margin-left: 12px;
+        padding: 0 11px 0 13px;
+        text-overflow: ellipsis;
+        width: 200px;
+      }
+
+      @media print {
+        #map-canvas {
+          height: 500px;
+          margin: 0;
+        }
+      }
+    </style>
+    <link rel="stylesheet" href="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.css">
+    <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Open+Sans:300,400,700">
+    <script src="http://code.jquery.com/jquery.min.js"></script>
+    <script src="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
+    <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?v=3.exp&signed_in=true&libraries=places&key=AIzaSyBHQE7WceflR7Rv5GyQ2v2xmRrZGHZDRU4"></script>
+    <!-- this script is courtesy of pitlivebuss.com -->
+    <!-- Firebase -->
+    <script type="text/javascript" src="https://cdn.firebase.com/js/client/1.1.0/firebase.js"></script>
+    <!-- RSVP -->
+    <script type="text/javascript" src="js/rsvp.min.js"></script>
+    <!-- GeoFire -->
+    <script type="text/javascript" src="js/geofire.min.js"></script>
+    <!-- Lo-Dash -->
+    <script type="text/javascript" src="js/lodash.min.js"></script>
+    <script type="text/javascript" src="js/task13DemoJs.js"></script>
+  </head>
+  <body>
+    <form>
+      <input type="search" id="start" class="controls" value="" placeholder="Enter your travel origin"/>
+      <input type="search" id="end" class="controls" value="" placeholder="Enter your travel destination"/>
+    </form>
+    <a href="#directions-panel" class="ui-btn ui-shadow ui-corner-all ui-btn-icon-notext ui-icon-bars" id="btnPanel">
+    </a>
+    <div data-role="page" id="map-page" data-url="map-page">
+      <div data-role="panel" id="directions-panel" data-position="right" data-display="overlay" class="ui-panel ui-panel-position-right ui-panel-display-overlay ui-panel-animate ui-panel-open">
+        <a href="" data-rel="close" data-role="button" data-inline="true" data-corners="true" 
+          data-shadow="true" data-iconshadow="true" data-wrapperels="span" 
+          class="ui-btn ui-shadow ui-corner-all ui-btn-icon-notext ui-icon-carat-r">
+        </a>
+        <div data-role="fieldcontain">
+            <label for="depart" class="select">Depart By:</label>
+            <select name="depart" id="depart">
+              <option value="Now" selected="Selected">Now</option>
+            </select>
+        </div>
+        <div data-role="fieldcontain">
+            <label for="depart" class="select">Arrive By:</label>
+            <select name="arrive" id="arrive">
+              <option value="None" selected="Selected">None</option>
+            </select>
+        </div>
+      </div>   
+      <div role="main" class="ui-content" id="map-canvas"></div>                 
+    </div>    
+  </body>
+</html>
