@@ -254,7 +254,7 @@ function addTimeOpt() {
     $("#ampm option[value='2']").attr("selected","selected");
       
   }
-  
+
   var myselect = $("select#ampm");
   myselect.selectmenu("refresh"); 
 }
@@ -344,7 +344,7 @@ function calcRoute() {
 
   check = $( "#nav1" ).hasClass( "ui-btn-active" )
 
-  if (!check) {
+  if (check) {
   // Create a DirectionsRequest using TRANSIT directions with departure time
     var request = {
         origin: start,
