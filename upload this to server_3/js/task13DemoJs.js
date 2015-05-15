@@ -9,7 +9,8 @@ var markerArray1 = [];
 var interval;
 var autocomplete2;
 var geocoder = new google.maps.Geocoder();
-// this script is courtesy of pitlivebus.com
+// this script is courtesy of pitlivebus.com -start
+// source : https://github.com/alpire/pitlivebus -start
 // Set the center as Firebase HQ
 var locations = {
   "Pittsburgh": [40.440876, -79.9497555]
@@ -89,7 +90,8 @@ function addFirebaseRef(url) {
 
 addFirebaseRef("https://publicdata-transit.firebaseio.com/");
 addFirebaseRef("https://alpire.firebaseio.com/");
-// this script is courtesy of pitlivebus.com
+// this script is courtesy of pitlivebus.com -end
+// source : https://github.com/alpire/pitlivebus -end
 
 function padDigits(number, digits) {
     return Array(Math.max(digits - String(number).length + 1, 0)).join(0) + number;
@@ -116,7 +118,8 @@ $( document ).on( "pagecreate", "#map-page", function() {
     }
     // Drawing Google Map
     function drawMap(latlng) {
-      // this script is courtesy of pitlivebus.com
+      // this script is courtesy of pitlivebus.com -start
+      // source : https://github.com/alpire/pitlivebus -start
 
         // Get the location as a Google Maps latitude-longitude object
         var loc = latlng;
@@ -124,7 +127,8 @@ $( document ).on( "pagecreate", "#map-page", function() {
         if(!pittsburgh_bounds.contains(latlng)) {
           loc = locations["Pittsburgh"];
         }
-        // this script is courtesy of pitlivebus.com
+        // this script is courtesy of pitlivebus.com -start
+        // source : https://github.com/alpire/pitlivebus -start
 
         var myOptions = {
             zoom: 16,
@@ -179,7 +183,9 @@ $( document ).on( "pagecreate", "#map-page", function() {
         google.maps.event.addListener(autocomplete2, 'place_changed', function() {
           calcRoute();
          });
-        // this script is courtesy of pitlivebus.com
+
+        // this script is courtesy of pitlivebus.com -start
+        // source : https://github.com/alpire/pitlivebus -start
         var updateCriteria = _.debounce(function() {
           var bounds = map.getBounds();
           if(typeof(Storage) !== "undefined") {
@@ -195,7 +201,8 @@ $( document ).on( "pagecreate", "#map-page", function() {
         }, 10);
 
         google.maps.event.addListener(map, "bounds_changed", updateCriteria);
-        // this script is courtesy of pitlivebuss.com
+        // this script is courtesy of pitlivebus.com -end
+        // source : https://github.com/alpire/pitlivebus -end
         
         // load vehicle marker the first time
         // loadVehicle();
@@ -490,7 +497,8 @@ function CenterControl(controlDiv, map, position) {
 
 }
 
-// this script is courtesy of pitlivebus.com
+// this script is courtesy of pitlivebus.com -start
+// source : https://github.com/alpire/pitlivebus -start
 /**********************/
 /*  HELPER FUNCTIONS  */
 /**********************/
@@ -745,4 +753,5 @@ LocationOverlay.prototype.toggleDOM = function() {
     this.setMap(this.map_);
   }
 };
-// this script is courtesy of pitlivebus.com
+// this script is courtesy of pitlivebus.com -end
+// source : https://github.com/alpire/pitlivebus -end
