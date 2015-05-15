@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Task13Demo</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style type="text/css">
+      html, body,#map-page { height: 100%; padding: 0;}
+
+      #map-canvas {
+        height: 70%;
+        margin: 0;
+      }
+
+      #adBox{
+        height: 65px;
+        width: 250px;        
+      }
+
+      div.ui-input-search { width: 300px !important }
+
+      .ui-panel.ui-panel-position-right {
+        width: 20em !important;
+      }
+
+      .ui-icon-bars {
+        height: 3em !important;
+        width: 3em !important;
+      }
+
+      .ui-icon-refresh {
+        width: 1.5em !important;
+        height: 1.2em !important;
+      }
+
+      @media print {
+        #map-canvas {
+          height: 300px;
+          margin: 0;
+        }
+      }
+    </style>
+    <link rel="stylesheet" href="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.css">
+    <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Open+Sans:300,400,700">
+    <script src="http://code.jquery.com/jquery.min.js"></script>
+    <script src="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
+    <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?v=3.exp&signed_in=true&libraries=places&key=AIzaSyBHQE7WceflR7Rv5GyQ2v2xmRrZGHZDRU4"></script>
+    <!-- this script is courtesy of pitlivebuss.com -->
+    <!-- Firebase -->
+    <script type="text/javascript" src="https://cdn.firebase.com/js/client/1.1.0/firebase.js"></script>
+    <!-- RSVP -->
+    <script type="text/javascript" src="js/rsvp.min.js"></script>
+    <!-- GeoFire -->
+    <script type="text/javascript" src="js/geofire.min.js"></script>
+    <!-- Lo-Dash -->
+    <script type="text/javascript" src="js/lodash.min.js"></script>
+    <script type="text/javascript" src="js/task13DemoJs.js"></script>
+  </head>
+  <body>
+    <div id="ad">
+      <img src="img\google-adsense-money.png" alt="ad" id="adBox">
+    </div>
+    <a href="#directions-panel" class="ui-btn ui-shadow ui-corner-all ui-btn-icon-notext ui-icon-bars" id="btnPanel"></a>
+    <div data-role="page" id="map-page" data-url="map-page">
+      <form>
+        <input type="search" id="start" class="controls" value="" placeholder="Enter your travel origin"/>
+        <input type="search" id="end" class="controls" value="" placeholder="Enter your travel destination"/>
+      </form>
+      <div data-role="panel" id="directions-panel" data-position="right" data-display="overlay" class="ui-panel ui-panel-position-right ui-panel-display-overlay ui-panel-animate ui-panel-open">
+        <a href="" data-rel="close" data-role="button" data-inline="true" data-corners="true" 
+          data-shadow="true" data-iconshadow="true" data-wrapperels="span" 
+          class="ui-btn ui-shadow ui-corner-all ui-btn-icon-notext ui-icon-carat-r">
+        </a>
+        <div data-role="navbar">
+          <ul>
+            <li><a href="#" class="ui-btn-active" id="nav1">Depart At</a></li>
+            <li><a href="#" id="nav2">Arrive By</a></li>
+          </ul>
+        </div>
+        <div>
+          <fieldset data-role="controlgroup" data-type="horizontal">
+            <select name="hour" id="hour"></select>
+            <select name="minute" id="minute"></select>
+            <select name="ampm" id="ampm"></select>
+            <a href="" data-role="button" data-icon="refresh" data-iconpos="notext" id="refresh">Refresh</a>
+          </fieldset>
+        </div>
+      </div>   
+      <div role="main" class="ui-content" id="map-canvas"></div>                 
+    </div>    
+  </body>
+</html>
